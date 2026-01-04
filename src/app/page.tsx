@@ -1,27 +1,38 @@
+import Navbar from "@/components/layout/Navbar";
+import LearningPath from "@/components/learning/LearningPath";
+import FuturisticButton from "@/components/ui/FuturisticButton";
+import { Sparkles, ArrowRight } from "lucide-react";
+
 export default function Home() {
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen p-6 relative overflow-hidden">
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-cyan-500/10 rounded-full blur-[120px]" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-emerald-500/10 rounded-full blur-[120px]" />
-
-      <div className="z-10 text-center space-y-8 max-w-2xl">
-        <h1 className="text-6xl font-black tracking-tight neon-text-blue mb-4">
-          IDIOMA 2026
-        </h1>
-        <p className="text-zinc-400 text-xl font-light leading-relaxed">
-          El futuro del aprendizaje de idiomas. <br />
-          Minimalismo futurista impulsado por <span className="text-emerald-400 font-medium">Antigravity AI</span>.
-        </p>
-
-        <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
-          <button className="glass-morphism px-8 py-4 rounded-2xl font-bold text-lg hover:scale-105 transition-all duration-300 active:scale-95 neon-glow-blue border-cyan-500/50">
-            EMPEZAR AHORA
-          </button>
-          <button className="glass-morphism px-8 py-4 rounded-2xl font-bold text-lg hover:bg-white/5 transition-all duration-300">
-            YA TENGO CUENTA
-          </button>
-        </div>
+    <div className="relative min-h-screen">
+      <Navbar />
+      <main className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-[1fr_350px] gap-8 pt-32 px-6">
+        <section className="relative">
+          <div className="flex flex-col items-center mb-12 text-center">
+            <h2 className="text-zinc-500 text-sm font-black uppercase tracking-[0.3em] mb-2">Sección 1</h2>
+            <h1 className="text-4xl font-black text-white">Introducción al Futuro</h1>
+          </div>
+          <LearningPath />
+        </section>
+        <aside className="hidden lg:block space-y-6">
+          <div className="glass-morphism p-6 rounded-3xl border-cyan-500/20 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity"><Sparkles size={64} className="text-cyan-400" /></div>
+            <h3 className="text-sm font-bold text-cyan-400 uppercase tracking-widest mb-4 flex items-center gap-2"><Sparkles size={16} /> Recomendado</h3>
+            <p className="text-white font-medium mb-6">Tu racha está en peligro. Completa la lección de "Saludos" para mantener el impulso.</p>
+            <FuturisticButton variant="primary" className="w-full" glow>CONTINUAR <ArrowRight size={18} /></FuturisticButton>
+          </div>
+          <div className="glass-morphism p-6 rounded-3xl border-white/5 space-y-4">
+            <h3 className="text-sm font-bold text-zinc-500 uppercase tracking-widest">Liga de Diamante</h3>
+            <div className="flex items-center justify-between p-3 rounded-2xl bg-white/5 border border-white/5"><span className="text-zinc-400 text-xs">Posición actual</span><span className="text-white font-mono font-bold">#12</span></div>
+            <p className="text-xs text-zinc-500 text-center">Faltan 2 días para terminar la temporada.</p>
+          </div>
+        </aside>
+      </main>
+      <div className="fixed inset-0 -z-50 overflow-hidden pointer-events-none">
+        <div className="absolute top-[20%] left-[10%] w-[500px] h-[500px] bg-cyan-500/5 rounded-full blur-[150px]" />
+        <div className="absolute bottom-[10%] right-[5%] w-[400px] h-[400px] bg-emerald-500/5 rounded-full blur-[130px]" />
       </div>
-    </main>
+    </div>
   );
 }
