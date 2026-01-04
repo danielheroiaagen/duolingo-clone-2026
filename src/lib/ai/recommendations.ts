@@ -1,18 +1,13 @@
-export async function generateAIRecommendation(userStats: any) {
+export async function generateAIRecommendation(userStats: { streak: number; xp: number; hearts: number }) {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return "Empieza con la lección de Fundamentos I para calentar.";
   try {
     const response = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: { "Content-Type": "application/json", "Authorization": `Bearer ${apiKey}` },
-      body: JSON.stringify({
-        model: "gpt-4o",
-        messages: [{ role: "system", content: "Eres un tutor de idiomas experto. Basado en las estadísticas del usuario, da una recomendación corta y motivadora de menos de 20 palabras." }, { role: "user", content: `Usuario con racha de ${userStats.streak}, XP de ${userStats.xp} y ${userStats.hearts} vidas.` }],
-      }),
+      body: JSON.stringify({ model: "o1", messages: [{ role: "user", content: `You are an elite language tutor with advanced reasoning. User stats: ${userStats.streak} day streak, ${userStats.xp} total XP, ${userStats.hearts} lives left. Provide a short, highly-reasoned tip (max 15 words) for their next step.` }] }),
     });
     const data = await response.json();
-    return data.choices?.[0]?.message?.content || "Continúa con tu racha, vas por buen camino.";
-  } catch (error) {
-    return "Es un buen momento para repasar tus errores anteriores.";
-  }
+    return data.choices?.[0]?.message?.content || "Keep going, your progress is solid!";
+  } catch (error) { return "Keep practicing, you're doing great!"; }
 }
