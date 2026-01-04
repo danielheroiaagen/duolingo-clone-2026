@@ -1,0 +1,37 @@
+{
+  "name": "duolingo-clone-2026",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio"
+  },
+  "dependencies": {
+    "next": "16.1.1",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "lucide-react": "latest",
+    "@supabase/supabase-js": "latest",
+    "@supabase/ssr": "latest",
+    "drizzle-orm": "^0.38.0",
+    "postgres": "latest",
+    "zod": "latest",
+    "clsx": "latest",
+    "tailwind-merge": "latest"
+  },
+  "devDependencies": {
+    "typescript": "5.7.2",
+    "@types/node": "22.10.2",
+    "@types/react": "19.0.1",
+    "@types/react-dom": "19.0.1",
+    "postcss": "8.4.49",
+    "tailwindcss": "3.4.16",
+    "eslint": "9.16.0",
+    "eslint-config-next": "15.1.0",
+    "drizzle-kit": "^0.30.0"
+  }
+}
