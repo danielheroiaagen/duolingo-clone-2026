@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
-import { db } from "@/db";
-import { userProgress, users, lessons } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
+import { getDb } from "@/lib/supabase/db";
 import { requireAuth } from "@/lib/api/auth";
 import { errors } from "@/lib/api/errors";
 
 // ============================================
 // POST /api/progress - Update user progress
+// Using Supabase Client
 // ============================================
 
 export async function POST(request: Request) {
@@ -26,75 +25,83 @@ export async function POST(request: Request) {
       return errors.badRequest("lessonId is required");
     }
 
-    // Get user's database ID
-    const [dbUser] = await db
-      .select({ id: users.id })
-      .from(users)
-      .where(eq(users.supabaseId, user!.id))
-      .limit(1);
+    const db = await getDb();
 
-    if (!dbUser) {
+    // Get user's database ID
+    const { data: dbUser, error: userError } = await db
+      .from("users")
+      .select("id")
+      .eq("supabase_id", user!.id)
+      .single();
+
+    if (userError || !dbUser) {
       return errors.notFound("User not found in database");
     }
 
     // Check if lesson exists
-    const [lesson] = await db
-      .select({ id: lessons.id, xpReward: lessons.xpReward })
-      .from(lessons)
-      .where(eq(lessons.id, lessonId))
-      .limit(1);
+    const { data: lesson, error: lessonError } = await db
+      .from("lessons")
+      .select("id, xp_reward")
+      .eq("id", lessonId)
+      .single();
 
-    if (!lesson) {
+    if (lessonError || !lesson) {
       return errors.notFound("Lesson not found");
     }
 
     // Check for existing progress
-    const [existingProgress] = await db
-      .select()
-      .from(userProgress)
-      .where(
-        and(
-          eq(userProgress.userId, dbUser.id),
-          eq(userProgress.lessonId, lessonId)
-        )
-      )
-      .limit(1);
+    const { data: existingProgress } = await db
+      .from("user_progress")
+      .select("*")
+      .eq("user_id", dbUser.id)
+      .eq("lesson_id", lessonId)
+      .single();
 
     if (existingProgress) {
       // Update existing progress
       await db
-        .update(userProgress)
-        .set({
+        .from("user_progress")
+        .update({
           score: Math.max(existingProgress.score, score || 0),
           completed: completed || existingProgress.completed,
           attempts: existingProgress.attempts + 1,
-          lastAccessedAt: new Date(),
-          completedAt: completed ? new Date() : existingProgress.completedAt,
+          last_accessed_at: new Date().toISOString(),
+          completed_at: completed ? new Date().toISOString() : existingProgress.completed_at,
         })
-        .where(eq(userProgress.id, existingProgress.id));
+        .eq("id", existingProgress.id);
     } else {
       // Create new progress
-      await db.insert(userProgress).values({
-        userId: dbUser.id,
-        lessonId,
-        score: score || 0,
-        completed: completed || false,
-        attempts: 1,
-        completedAt: completed ? new Date() : undefined,
-      });
+      await db
+        .from("user_progress")
+        .insert({
+          user_id: dbUser.id,
+          lesson_id: lessonId,
+          score: score || 0,
+          completed: completed || false,
+          attempts: 1,
+          completed_at: completed ? new Date().toISOString() : null,
+        });
     }
 
     // Award XP if completed for the first time
     let xpAwarded = 0;
     if (completed && !existingProgress?.completed) {
-      xpAwarded = lesson.xpReward;
+      xpAwarded = lesson.xp_reward;
+      
+      // Get current XP and update
+      const { data: currentUser } = await db
+        .from("users")
+        .select("xp")
+        .eq("id", dbUser.id)
+        .single();
+
       await db
-        .update(users)
-        .set({
-          xp: dbUser.id + xpAwarded, // This should use SQL increment
-          updatedAt: new Date(),
+        .from("users")
+        .update({
+          xp: (currentUser?.xp || 0) + xpAwarded,
+          updated_at: new Date().toISOString(),
         })
-        .where(eq(users.id, dbUser.id));
+        .eq("id", dbUser.id);
     }
 
     return NextResponse.json({
@@ -110,6 +117,7 @@ export async function POST(request: Request) {
 
 // ============================================
 // GET /api/progress - Get user's progress
+// Using Supabase Client
 // ============================================
 
 export async function GET() {
@@ -117,28 +125,29 @@ export async function GET() {
   if (authError) return authError;
 
   try {
-    // Get user's database ID
-    const [dbUser] = await db
-      .select({ id: users.id, xp: users.xp, streak: users.streak, hearts: users.hearts })
-      .from(users)
-      .where(eq(users.supabaseId, user!.id))
-      .limit(1);
+    const db = await getDb();
 
-    if (!dbUser) {
+    // Get user's database record
+    const { data: dbUser, error: userError } = await db
+      .from("users")
+      .select("id, xp, streak, hearts")
+      .eq("supabase_id", user!.id)
+      .single();
+
+    if (userError || !dbUser) {
       return errors.notFound("User not found in database");
     }
 
     // Get all progress for this user
-    const progress = await db
-      .select({
-        lessonId: userProgress.lessonId,
-        completed: userProgress.completed,
-        score: userProgress.score,
-        attempts: userProgress.attempts,
-        lastAccessedAt: userProgress.lastAccessedAt,
-      })
-      .from(userProgress)
-      .where(eq(userProgress.userId, dbUser.id));
+    const { data: progress, error: progressError } = await db
+      .from("user_progress")
+      .select("lesson_id, completed, score, attempts, last_accessed_at")
+      .eq("user_id", dbUser.id);
+
+    if (progressError) {
+      console.error("[Progress] Query error:", progressError);
+      return errors.internal("Failed to fetch progress");
+    }
 
     return NextResponse.json({
       stats: {
@@ -146,9 +155,9 @@ export async function GET() {
         streak: dbUser.streak,
         hearts: dbUser.hearts,
       },
-      progress: progress.reduce(
+      progress: (progress ?? []).reduce(
         (acc, p) => {
-          acc[p.lessonId] = {
+          acc[p.lesson_id] = {
             completed: p.completed,
             score: p.score,
             attempts: p.attempts,
