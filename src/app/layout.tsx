@@ -18,7 +18,7 @@ export default function RootLayout({
     <html lang="es" className="dark">
       <body className={`${inter.className} bg-[#0A0A0A] text-white min-h-screen selection:bg-cyan-500/30`}>
         {children}
-       body>
+      </body>
     </html>
   );
 }
