@@ -49,7 +49,7 @@ export function useVoiceRecorder() {
 
       mediaRecorder.start(1000);
     } catch {
-      setError("Error accediendo al micrófono");
+      setError("Error accediendo al micr\u00f3fono");
     }
   };
 
@@ -63,16 +63,21 @@ export function useVoiceRecorder() {
 
   const processAudio = async (blob: Blob) => {
     try {
-      // Step 1: Transcribe
+      // Step 1: Transcribe (FormData doesn't need Content-Type header)
       setStatus(VOICE_STATUS.TRANSCRIBING);
       const formData = new FormData();
       formData.append("file", blob, "audio.webm");
-      formData.append("model", "whisper-1");
 
       const sttResponse = await fetch("/api/ai/transcribe", {
         method: "POST",
         body: formData,
       });
+
+      if (!sttResponse.ok) {
+        const errorData = await sttResponse.json().catch(() => ({}));
+        throw new Error(errorData.message || "Transcription failed");
+      }
+
       const { text } = await sttResponse.json();
 
       if (!text) {
@@ -82,22 +87,33 @@ export function useVoiceRecorder() {
 
       setTranscript(text);
 
-      // Step 2: Get AI response
+      // Step 2: Get AI response (JSON needs Content-Type header)
       setStatus(VOICE_STATUS.REASONING);
       const chatResponse = await fetch("/api/ai/chat", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({ message: text }),
       });
+
+      if (!chatResponse.ok) {
+        const errorData = await chatResponse.json().catch(() => ({}));
+        throw new Error(errorData.message || "Chat failed");
+      }
+
       const { reply } = await chatResponse.json();
       setAiReply(reply);
 
-      // Step 3: Text to speech
+      // Step 3: Text to speech (JSON needs Content-Type header)
       setStatus(VOICE_STATUS.SPEAKING);
       await speakText(reply);
 
       setStatus(VOICE_STATUS.IDLE);
-    } catch {
-      setError("Error procesando el audio");
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Error procesando el audio";
+      setError(message);
+      setStatus(VOICE_STATUS.IDLE);
     }
   };
 
@@ -105,16 +121,32 @@ export function useVoiceRecorder() {
     try {
       const response = await fetch("/api/ai/speech", {
         method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify({ text }),
       });
-      const url = URL.createObjectURL(await response.blob());
+
+      if (!response.ok) {
+        console.error("[Speech] TTS failed:", response.status);
+        return;
+      }
+
+      const audioBlob = await response.blob();
+      const url = URL.createObjectURL(audioBlob);
 
       if (audioRef.current) {
         audioRef.current.src = url;
         await audioRef.current.play();
+
+        // Cleanup URL after playing
+        audioRef.current.onended = () => {
+          URL.revokeObjectURL(url);
+        };
       }
-    } catch {
-      // Silent fail for TTS
+    } catch (error) {
+      console.error("[Speech] TTS error:", error);
+      // Silent fail for TTS - don't break the flow
     }
   };
 
