@@ -15,8 +15,11 @@
     "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^1.0.0",
+    "@ai-sdk/react": "^1.0.0",
     "@supabase/ssr": "latest",
     "@supabase/supabase-js": "latest",
+    "ai": "^4.0.0",
     "clsx": "latest",
     "drizzle-orm": "^0.38.0",
     "immer": "^10.1.1",
