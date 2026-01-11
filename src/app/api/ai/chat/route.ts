@@ -6,7 +6,7 @@ import { errors } from "@/lib/api/errors";
 
 // ============================================
 // CHAT API - Language Learning Assistant
-// Using AI SDK 5 with GPT-5.2
+// Using AI SDK 6 with GPT-5.2
 // ============================================
 
 const MAX_MESSAGE_LENGTH = 2000;
@@ -68,7 +68,7 @@ export async function POST(req: Request) {
       contextPrompt += `\nUser's streak: ${context.streak} days`;
     }
 
-    // 5. Generate response using AI SDK 5 with GPT-5.2
+    // 5. Generate response using AI SDK 6 with GPT-5.2
     const { text, usage } = await generateText({
       model: openai("gpt-5.2"),
       system: SYSTEM_PROMPT + contextPrompt,
