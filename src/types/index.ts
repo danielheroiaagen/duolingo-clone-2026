@@ -12,6 +12,15 @@ export const BUTTON_VARIANT = {
 
 export type ButtonVariant = (typeof BUTTON_VARIANT)[keyof typeof BUTTON_VARIANT];
 
+// Button sizes
+export const BUTTON_SIZE = {
+  SM: "sm",
+  MD: "md",
+  LG: "lg",
+} as const;
+
+export type ButtonSize = (typeof BUTTON_SIZE)[keyof typeof BUTTON_SIZE];
+
 // Voice assistant status
 export const VOICE_STATUS = {
   IDLE: "idle",

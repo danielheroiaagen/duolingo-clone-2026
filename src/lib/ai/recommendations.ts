@@ -9,5 +9,5 @@ export async function generateAIRecommendation(userStats: { streak: number; xp: 
     });
     const data = await response.json();
     return data.choices?.[0]?.message?.content || "Keep going, your progress is solid!";
-  } catch (error) { return "Keep practicing, you're doing great!"; }
+  } catch { return "Keep practicing, you're doing great!"; }
 }

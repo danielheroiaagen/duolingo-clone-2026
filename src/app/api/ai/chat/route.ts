@@ -33,7 +33,7 @@ Always respond in a mix of Spanish and English to reinforce learning.`;
 
 export async function POST(req: Request) {
   // 1. Require authentication
-  const { user, error: authError } = await requireAuth();
+  const { error: authError } = await requireAuth();
   if (authError) return authError;
 
   try {
