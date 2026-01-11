@@ -6,21 +6,21 @@ import { BasePage } from "../base-page";
 // ============================================
 
 export class HomePage extends BasePage {
-  readonly sectionTitle: Locator;
-  readonly mainTitle: Locator;
-  readonly navbar: Locator;
-  readonly learningPath: Locator;
-  readonly continueButton: Locator;
-  readonly loginButton: Locator;
+  readonly unitTitle: Locator;
+  readonly levelBadge: Locator;
+  readonly startButton: Locator;
+  readonly bottomNav: Locator;
+  readonly homeNavItem: Locator;
+  readonly profileNavItem: Locator;
 
   constructor(page: Page) {
     super(page);
-    this.sectionTitle = page.getByText("Sección 1");
-    this.mainTitle = page.getByRole("heading", { name: /Introducción al Futuro/i });
-    this.navbar = page.locator("nav");
-    this.learningPath = page.locator("section").first();
-    this.continueButton = page.getByRole("button", { name: /CONTINUAR/i });
-    this.loginButton = page.getByRole("link", { name: /Iniciar/i });
+    this.unitTitle = page.getByText(/Unidad \d+/i).first();
+    this.levelBadge = page.getByText(/NIVEL \d+/i);
+    this.startButton = page.getByText(/¡Empieza!/i);
+    this.bottomNav = page.locator("nav").last();
+    this.homeNavItem = page.getByText("Inicio");
+    this.profileNavItem = page.getByText("Perfil");
   }
 
   async goto(): Promise<void> {
@@ -28,18 +28,18 @@ export class HomePage extends BasePage {
   }
 
   async verifyPageLoaded(): Promise<void> {
-    await expect(this.mainTitle).toBeVisible();
+    await expect(this.unitTitle).toBeVisible();
   }
 
   async verifyNavbarVisible(): Promise<void> {
-    await expect(this.navbar).toBeVisible();
+    await expect(this.homeNavItem).toBeVisible();
   }
 
-  async verifySectionTitleVisible(): Promise<void> {
-    await expect(this.sectionTitle).toBeVisible();
+  async verifyLevelBadgeVisible(): Promise<void> {
+    await expect(this.levelBadge).toBeVisible();
   }
 
-  async clickLogin(): Promise<void> {
-    await this.loginButton.click();
+  async clickProfile(): Promise<void> {
+    await this.profileNavItem.click();
   }
 }

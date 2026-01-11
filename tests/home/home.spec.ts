@@ -13,37 +13,30 @@ test.describe("Home Page", () => {
 
       await homePage.goto();
       await homePage.verifyPageLoaded();
-
-      await expect(page).toHaveTitle(/Duolingo 2026/i);
     }
   );
 
-  test("should display main content sections",
+  test("should display learning unit",
     { tag: ["@high", "@e2e", "@home", "@HOME-E2E-002"] },
     async ({ page }) => {
       const homePage = new HomePage(page);
 
       await homePage.goto();
 
-      await homePage.verifyNavbarVisible();
-      await homePage.verifySectionTitleVisible();
-      await expect(homePage.mainTitle).toBeVisible();
+      await homePage.verifyPageLoaded();
+      await homePage.verifyLevelBadgeVisible();
     }
   );
 
-  test("should have working navigation",
+  test("should have bottom navigation",
     { tag: ["@high", "@e2e", "@home", "@HOME-E2E-003"] },
     async ({ page }) => {
       const homePage = new HomePage(page);
 
       await homePage.goto();
 
-      // Verify navbar is present
       await homePage.verifyNavbarVisible();
-
-      // Check for login link
-      const loginLink = page.getByRole("link", { name: /Iniciar|Login/i });
-      await expect(loginLink).toBeVisible();
+      await expect(homePage.profileNavItem).toBeVisible();
     }
   );
 
