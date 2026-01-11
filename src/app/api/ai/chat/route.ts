@@ -1,9 +1,12 @@
 import { NextResponse } from "next/server";
+import { openai } from "@ai-sdk/openai";
+import { generateText } from "ai";
 import { requireAuth } from "@/lib/api/auth";
 import { errors } from "@/lib/api/errors";
 
 // ============================================
 // CHAT API - Language Learning Assistant
+// Using AI SDK 5 with GPT-5.2
 // ============================================
 
 const MAX_MESSAGE_LENGTH = 2000;
@@ -47,7 +50,9 @@ export async function POST(req: Request) {
     }
 
     if (message.length > MAX_MESSAGE_LENGTH) {
-      return errors.badRequest(`Message too long. Maximum ${MAX_MESSAGE_LENGTH} characters`);
+      return errors.badRequest(
+        `Message too long. Maximum ${MAX_MESSAGE_LENGTH} characters`
+      );
     }
 
     if (message.trim().length === 0) {
@@ -63,43 +68,23 @@ export async function POST(req: Request) {
       contextPrompt += `\nUser's streak: ${context.streak} days`;
     }
 
-    // 5. Call OpenAI API
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: "gpt-4o-mini", // Fast and cost-effective for chat
-        messages: [
-          {
-            role: "system",
-            content: SYSTEM_PROMPT + contextPrompt,
-          },
-          {
-            role: "user",
-            content: message,
-          },
-        ],
-        max_tokens: 200,
-        temperature: 0.7,
-      }),
+    // 5. Generate response using AI SDK 5 with GPT-5.2
+    const { text, usage } = await generateText({
+      model: openai("gpt-5.2"),
+      system: SYSTEM_PROMPT + contextPrompt,
+      prompt: message,
+      maxTokens: 200,
+      temperature: 0.7,
     });
 
-    if (!response.ok) {
-      console.error(`[Chat] OpenAI error for user ${user?.id}:`, response.status);
-      return errors.serviceUnavailable("Chat service temporarily unavailable");
-    }
-
-    const data = await response.json();
-    const reply = data.choices?.[0]?.message?.content || "Lo siento, no pude procesar tu mensaje. ¡Intenta de nuevo!";
+    const reply =
+      text || "Lo siento, no pude procesar tu mensaje. \u00a1Intenta de nuevo!";
 
     return NextResponse.json({
       reply,
       usage: {
-        promptTokens: data.usage?.prompt_tokens,
-        completionTokens: data.usage?.completion_tokens,
+        promptTokens: usage?.promptTokens,
+        completionTokens: usage?.completionTokens,
       },
     });
   } catch (error) {
