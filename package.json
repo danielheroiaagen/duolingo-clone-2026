@@ -9,7 +9,10 @@
     "lint": "eslint src/",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "db:seed": "npx tsx src/db/seed.ts"
+    "db:seed": "npx tsx src/db/seed.ts",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage"
   },
   "dependencies": {
     "@supabase/ssr": "latest",
@@ -28,15 +31,20 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.3",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/react": "^16.1.0",
+    "@testing-library/user-event": "^14.6.0",
     "@types/node": "22.10.2",
     "@types/react": "19.0.1",
     "@types/react-dom": "19.0.1",
+    "@vitejs/plugin-react": "^4.3.4",
     "drizzle-kit": "^0.30.0",
     "eslint": "9.16.0",
     "eslint-config-next": "15.1.0",
+    "jsdom": "^26.0.0",
     "postcss": "8.4.49",
     "tailwindcss": "3.4.16",
-    "tsx": "^4.19.0",
-    "typescript": "5.7.2"
+    "typescript": "5.7.2",
+    "vitest": "^2.1.8"
   }
 }
