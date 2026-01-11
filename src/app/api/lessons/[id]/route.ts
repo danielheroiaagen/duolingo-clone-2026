@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
-import { db } from "@/db";
-import { lessons, exercises } from "@/db/schema";
-import { eq, asc } from "drizzle-orm";
+import { getDb } from "@/lib/supabase/db";
 import { requireAuth } from "@/lib/api/auth";
 import { errors } from "@/lib/api/errors";
 
 // ============================================
 // GET /api/lessons/[id] - Get lesson with exercises
+// Using Supabase Client
 // ============================================
 
 export async function GET(
@@ -25,40 +24,56 @@ export async function GET(
       return errors.badRequest("Invalid lesson ID");
     }
 
-    // Get lesson
-    const [lesson] = await db
-      .select()
-      .from(lessons)
-      .where(eq(lessons.id, lessonId))
-      .limit(1);
+    const db = await getDb();
 
-    if (!lesson) {
-      return errors.notFound("Lesson not found");
+    // Get lesson with exercises in a single query
+    const { data: lesson, error: lessonError } = await db
+      .from("lessons")
+      .select(`
+        id,
+        title,
+        description,
+        xp_reward,
+        exercises:exercises(
+          id,
+          type,
+          question,
+          options,
+          correct_answer,
+          explanation,
+          order
+        )
+      `)
+      .eq("id", lessonId)
+      .single();
+
+    if (lessonError) {
+      if (lessonError.code === "PGRST116") {
+        return errors.notFound("Lesson not found");
+      }
+      console.error("[Lesson] Query error:", lessonError);
+      return errors.internal("Failed to fetch lesson");
     }
 
-    // Get exercises for this lesson
-    const lessonExercises = await db
-      .select({
-        id: exercises.id,
-        type: exercises.type,
-        question: exercises.question,
-        options: exercises.options,
-        correctAnswer: exercises.correctAnswer,
-        explanation: exercises.explanation,
-        order: exercises.order,
-      })
-      .from(exercises)
-      .where(eq(exercises.lessonId, lessonId))
-      .orderBy(asc(exercises.order));
+    // Sort exercises by order
+    const exercises = (lesson.exercises ?? []).sort((a, b) => a.order - b.order);
 
     return NextResponse.json({
       lesson: {
         id: lesson.id,
         title: lesson.title,
         description: lesson.description,
-        xpReward: lesson.xpReward,
+        xpReward: lesson.xp_reward,
       },
-      exercises: lessonExercises,
+      exercises: exercises.map((ex) => ({
+        id: ex.id,
+        type: ex.type,
+        question: ex.question,
+        options: ex.options,
+        correctAnswer: ex.correct_answer,
+        explanation: ex.explanation,
+        order: ex.order,
+      })),
     });
   } catch (error) {
     console.error("[Lesson] Error:", error);
