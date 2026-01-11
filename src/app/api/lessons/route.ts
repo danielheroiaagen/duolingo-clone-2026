@@ -7,14 +7,26 @@ import { errors } from "@/lib/api/errors";
 // Using Supabase Client
 // ============================================
 
+// Type for lesson with nested relations from Supabase query
+interface LessonQueryResult {
+  id: number;
+  module_id: number;
+  title: string;
+  description: string | null;
+  order: number;
+  xp_reward: number;
+  modules: { title: string } | null;
+  exercises: { count: number }[];
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const moduleId = searchParams.get("moduleId");
     const db = await getDb();
 
-    // Build query
-    let query = db
+    // Build query with explicit type
+    const { data, error } = await db
       .from("lessons")
       .select(`
         id,
@@ -27,41 +39,24 @@ export async function GET(request: Request) {
         exercises:exercises(count)
       `)
       .eq("is_active", true)
-      .order("order", { ascending: true });
-
-    // Filter by module if specified
-    if (moduleId) {
-      query = query.eq("module_id", parseInt(moduleId));
-    }
-
-    const { data, error } = await query;
+      .eq(moduleId ? "module_id" : "is_active", moduleId ? parseInt(moduleId) : true)
+      .order("order", { ascending: true })
+      .returns<LessonQueryResult[]>();
 
     if (error) {
       console.error("[Lessons] Query error:", error);
       return errors.internal("Failed to fetch lessons");
     }
 
-    const lessons = (data ?? []).map((lesson) => {
-      // Handle nested module name
-      const moduleName = Array.isArray(lesson.modules)
-        ? lesson.modules[0]?.title
-        : (lesson.modules as { title: string } | null)?.title ?? null;
-
-      // Handle exercise count
-      const exerciseCount = Array.isArray(lesson.exercises)
-        ? lesson.exercises.length
-        : (lesson.exercises as { count: number } | null)?.count ?? 0;
-
-      return {
-        id: lesson.id,
-        moduleId: lesson.module_id,
-        moduleName,
-        title: lesson.title,
-        description: lesson.description,
-        xpReward: lesson.xp_reward,
-        exerciseCount,
-      };
-    });
+    const lessons = (data ?? []).map((lesson) => ({
+      id: lesson.id,
+      moduleId: lesson.module_id,
+      moduleName: lesson.modules?.title ?? null,
+      title: lesson.title,
+      description: lesson.description,
+      xpReward: lesson.xp_reward,
+      exerciseCount: lesson.exercises?.[0]?.count ?? 0,
+    }));
 
     return NextResponse.json({ lessons });
   } catch (error) {

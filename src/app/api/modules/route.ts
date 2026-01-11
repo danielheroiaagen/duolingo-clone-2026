@@ -8,6 +8,16 @@ import { errors } from "@/lib/api/errors";
 // Using Supabase Client
 // ============================================
 
+// Type for module with nested lessons count from Supabase query
+interface ModuleQueryResult {
+  id: number;
+  title: string;
+  description: string | null;
+  position: string;
+  order: number;
+  lessons: { count: number }[];
+}
+
 export async function GET() {
   try {
     const user = await getOptionalUser();
@@ -25,7 +35,8 @@ export async function GET() {
         lessons:lessons(count)
       `)
       .eq("is_active", true)
-      .order("order", { ascending: true });
+      .order("order", { ascending: true })
+      .returns<ModuleQueryResult[]>();
 
     if (modulesError) {
       console.error("[Modules] Query error:", modulesError);
@@ -46,10 +57,7 @@ export async function GET() {
     }
 
     const result = (modulesData ?? []).map((mod) => {
-      // Handle the count from the nested lessons query
-      const lessonCount = Array.isArray(mod.lessons) 
-        ? mod.lessons.length 
-        : (mod.lessons as { count: number } | null)?.count ?? 0;
+      const lessonCount = mod.lessons?.[0]?.count ?? 0;
 
       return {
         id: mod.id,

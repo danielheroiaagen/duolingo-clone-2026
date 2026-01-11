@@ -8,6 +8,29 @@ import { errors } from "@/lib/api/errors";
 // Using Supabase Client
 // ============================================
 
+// Local types for query results
+interface DbUser {
+  id: number;
+  xp?: number;
+  streak?: number;
+  hearts?: number;
+}
+
+interface DbLesson {
+  id: number;
+  xp_reward: number;
+}
+
+interface DbProgress {
+  id: number;
+  score: number;
+  completed: boolean;
+  attempts: number;
+  completed_at: string | null;
+  lesson_id: number;
+  last_accessed_at: string;
+}
+
 export async function POST(request: Request) {
   const { user, error: authError } = await requireAuth();
   if (authError) return authError;
@@ -32,7 +55,7 @@ export async function POST(request: Request) {
       .from("users")
       .select("id")
       .eq("supabase_id", user!.id)
-      .single();
+      .single<DbUser>();
 
     if (userError || !dbUser) {
       return errors.notFound("User not found in database");
@@ -43,7 +66,7 @@ export async function POST(request: Request) {
       .from("lessons")
       .select("id, xp_reward")
       .eq("id", lessonId)
-      .single();
+      .single<DbLesson>();
 
     if (lessonError || !lesson) {
       return errors.notFound("Lesson not found");
@@ -55,7 +78,7 @@ export async function POST(request: Request) {
       .select("*")
       .eq("user_id", dbUser.id)
       .eq("lesson_id", lessonId)
-      .single();
+      .single<DbProgress>();
 
     if (existingProgress) {
       // Update existing progress
@@ -93,7 +116,7 @@ export async function POST(request: Request) {
         .from("users")
         .select("xp")
         .eq("id", dbUser.id)
-        .single();
+        .single<{ xp: number }>();
 
       await db
         .from("users")
@@ -132,7 +155,7 @@ export async function GET() {
       .from("users")
       .select("id, xp, streak, hearts")
       .eq("supabase_id", user!.id)
-      .single();
+      .single<DbUser>();
 
     if (userError || !dbUser) {
       return errors.notFound("User not found in database");
@@ -142,7 +165,8 @@ export async function GET() {
     const { data: progress, error: progressError } = await db
       .from("user_progress")
       .select("lesson_id, completed, score, attempts, last_accessed_at")
-      .eq("user_id", dbUser.id);
+      .eq("user_id", dbUser.id)
+      .returns<DbProgress[]>();
 
     if (progressError) {
       console.error("[Progress] Query error:", progressError);

@@ -73,7 +73,7 @@ export async function POST(req: Request) {
       model: openai("gpt-5.2"),
       system: SYSTEM_PROMPT + contextPrompt,
       prompt: message,
-      maxTokens: 200,
+      maxOutputTokens: 200,
       temperature: 0.7,
     });
 
@@ -83,8 +83,8 @@ export async function POST(req: Request) {
     return NextResponse.json({
       reply,
       usage: {
-        promptTokens: usage?.promptTokens,
-        completionTokens: usage?.completionTokens,
+        inputTokens: usage?.inputTokens,
+        outputTokens: usage?.outputTokens,
       },
     });
   } catch (error) {

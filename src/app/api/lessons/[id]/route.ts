@@ -8,6 +8,23 @@ import { errors } from "@/lib/api/errors";
 // Using Supabase Client
 // ============================================
 
+// Type for lesson with nested exercises from Supabase query
+interface LessonWithExercises {
+  id: number;
+  title: string;
+  description: string | null;
+  xp_reward: number;
+  exercises: Array<{
+    id: number;
+    type: string;
+    question: string;
+    options: string[] | null;
+    correct_answer: string;
+    explanation: string | null;
+    order: number;
+  }>;
+}
+
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -45,7 +62,7 @@ export async function GET(
         )
       `)
       .eq("id", lessonId)
-      .single();
+      .single<LessonWithExercises>();
 
     if (lessonError) {
       if (lessonError.code === "PGRST116") {

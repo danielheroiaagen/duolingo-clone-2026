@@ -1,19 +1,15 @@
 import { createClient } from "./server";
-import type { Database } from "@/types/database";
-import type { SupabaseClient } from "@supabase/supabase-js";
 
 // ============================================
-// TYPED SUPABASE DATABASE CLIENT
+// SUPABASE DATABASE CLIENT
 // ============================================
-
-export type TypedSupabaseClient = SupabaseClient<Database>;
 
 /**
- * Get a typed Supabase client for database operations.
- * Use this instead of the raw createClient for type safety.
+ * Get a Supabase client for database operations.
+ * Use .returns<T>() for type-safe reads where needed.
  */
-export async function getDb(): Promise<TypedSupabaseClient> {
-  return (await createClient()) as TypedSupabaseClient;
+export async function getDb() {
+  return await createClient();
 }
 
 /**
