@@ -57,13 +57,13 @@ const SAMPLE_MODULES: Module[] = [
 ];
 
 // ============================================
-// POSITION TRANSFORMS
+// POSITION TRANSFORMS - Responsive values
 // ============================================
 
-const POSITION_TRANSFORMS = {
-  [MODULE_POSITION.LEFT]: "translateX(-60px)",
-  [MODULE_POSITION.CENTER]: "none",
-  [MODULE_POSITION.RIGHT]: "translateX(60px)",
+const POSITION_CLASSES = {
+  [MODULE_POSITION.LEFT]: "-translate-x-8 sm:-translate-x-12 md:-translate-x-16",
+  [MODULE_POSITION.CENTER]: "translate-x-0",
+  [MODULE_POSITION.RIGHT]: "translate-x-8 sm:translate-x-12 md:translate-x-16",
 } as const;
 
 // ============================================
@@ -72,12 +72,14 @@ const POSITION_TRANSFORMS = {
 
 export default function LearningPath() {
   return (
-    <div className="flex flex-col items-center gap-12 py-32 max-w-xl mx-auto">
+    <div className="flex flex-col items-center gap-8 sm:gap-10 md:gap-12 py-8 sm:py-16 md:py-32 max-w-xl mx-auto px-4">
       {SAMPLE_MODULES.map((module) => (
         <div
           key={module.id}
-          className="flex flex-col items-center gap-4"
-          style={{ transform: POSITION_TRANSFORMS[module.position] }}
+          className={cn(
+            "flex flex-col items-center gap-3 sm:gap-4 transition-transform duration-300",
+            POSITION_CLASSES[module.position]
+          )}
         >
           <ModuleNode
             status={module.status}
@@ -86,7 +88,7 @@ export default function LearningPath() {
           />
           <h3
             className={cn(
-              "text-sm font-bold uppercase tracking-widest",
+              "text-xs sm:text-sm font-bold uppercase tracking-widest text-center",
               module.status === MODULE_STATUS.LOCKED
                 ? "text-zinc-700"
                 : "text-zinc-400"
@@ -116,8 +118,9 @@ function ModuleNode({ status, progress, total }: ModuleNodeProps) {
 
   if (isLocked) {
     return (
-      <div className="w-16 h-16 rounded-3xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-700">
-        <Lock size={24} />
+      <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl sm:rounded-3xl bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-700">
+        <Lock size={20} className="sm:hidden" />
+        <Lock size={24} className="hidden sm:block" />
       </div>
     );
   }
@@ -127,7 +130,7 @@ function ModuleNode({ status, progress, total }: ModuleNodeProps) {
       {/* Glow effect */}
       <div
         className={cn(
-          "absolute inset-[-4px] rounded-[2rem] blur-xl opacity-0 group-hover:opacity-40 transition-opacity duration-500",
+          "absolute inset-[-4px] rounded-[1.5rem] sm:rounded-[2rem] blur-xl opacity-0 group-hover:opacity-40 transition-opacity duration-500",
           isCompleted ? "bg-emerald-500" : "bg-cyan-500"
         )}
       />
@@ -135,22 +138,30 @@ function ModuleNode({ status, progress, total }: ModuleNodeProps) {
       {/* Button */}
       <button
         className={cn(
-          "relative w-20 h-20 rounded-[2rem] flex items-center justify-center transition-all duration-300 transform group-hover:-translate-y-1 group-active:scale-95",
+          "relative w-16 h-16 sm:w-20 sm:h-20 rounded-[1.5rem] sm:rounded-[2rem] flex items-center justify-center transition-all duration-300 transform group-hover:-translate-y-1 group-active:scale-95",
+          "focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-zinc-950",
           isCompleted
-            ? "bg-emerald-500/20 border-2 border-emerald-500 text-emerald-400"
-            : "glass-morphism border-2 border-cyan-500/50 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.2)]"
+            ? "bg-emerald-500/20 border-2 border-emerald-500 text-emerald-400 focus:ring-emerald-400"
+            : "glass-morphism border-2 border-cyan-500/50 text-cyan-400 shadow-[0_0_15px_rgba(6,182,212,0.2)] focus:ring-cyan-400"
         )}
+        aria-label={isCompleted ? "Módulo completado" : "Iniciar módulo"}
       >
         {isCompleted ? (
-          <Check size={32} strokeWidth={3} />
+          <>
+            <Check size={28} strokeWidth={3} className="sm:hidden" />
+            <Check size={32} strokeWidth={3} className="hidden sm:block" />
+          </>
         ) : (
-          <Play size={32} fill="currentColor" />
+          <>
+            <Play size={28} fill="currentColor" className="sm:hidden" />
+            <Play size={32} fill="currentColor" className="hidden sm:block" />
+          </>
         )}
       </button>
 
       {/* Progress badge */}
-      <div className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full bg-zinc-900 border-2 border-zinc-800 flex items-center justify-center">
-        <span className="text-[10px] font-black">
+      <div className="absolute -bottom-1 -right-1 w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-zinc-900 border-2 border-zinc-800 flex items-center justify-center">
+        <span className="text-[9px] sm:text-[10px] font-black">
           {progress}/{total}
         </span>
       </div>
